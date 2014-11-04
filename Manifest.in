@@ -1,0 +1,7 @@
+include LICENSE
+include README.md
+include *.txt *.ini *.cfg *.rst *md
+recursive-include nagademon2014/maingame/static *
+recursive-include nagademon2014/maingame/templates *
+recursive-include nagademon2013/maingame/locale *
+

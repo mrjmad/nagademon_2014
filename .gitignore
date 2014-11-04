@@ -46,9 +46,16 @@ coverage.xml
 
 # Django stuff:
 *.log
+*.sqlite3
 
 # Sphinx documentation
 docs/_build/
 
 # PyBuilder
 target/
+
+#pycharm
+.idea/
+
+#dev time
+nagademon2014/maingame/migrations/*
