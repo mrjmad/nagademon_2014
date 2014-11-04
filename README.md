@@ -1,6 +1,8 @@
 Nagademon 2014
 ================
 
+[![Build Status](https://travis-ci.org/mrjmad/nagademon_2014.svg)](https://travis-ci.org/mrjmad/nagademon_2014) [![Coverage Status](https://coveralls.io/repos/mrjmad/nagademon_2014/badge.png)](https://coveralls.io/r/mrjmad/nagademon_2014)
+
 Voila le repository de code pour mon Nagademon 2014.
 
 Bon autant je vais faire l'effort de mettre en anglais les label des champs et autre dans le
