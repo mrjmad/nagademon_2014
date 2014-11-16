@@ -37,5 +37,5 @@ setup(name='nagademon2014',
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     include_package_data=True,
     zip_safe=False,
-    install_requires=[]
+    install_requires=['django>=1.7,<1.8', ]
      )
