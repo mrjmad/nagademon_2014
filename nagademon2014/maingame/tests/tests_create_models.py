@@ -6,7 +6,7 @@ import datetime
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
-from ..models import (PlayerCharacter, Scene, Choice1Sceneto1Scene, Place,
+from ..models import (PlayerCharacter, Scene, Choice1PartSceneto1Scene, Place, PartScene,
                     NPCharacter, Quest, ObjectType, OneObject, GameSession, HistoryScenesandChoices)
 
 
@@ -29,6 +29,25 @@ def utils_create_two_scenes_with_one_place(testcase):
     testcase.sc1 = Scene.objects.create(short_name="sc1", name="sc1", text="tsc1", filename="sc1filename")
     testcase.sc2 = Scene.objects.create(short_name="sc2", name="sc2", text="tsc2", filename="sc2filename",
                          place=p)
+    testcase.partscene1_1 = PartScene.create(text="text 1",
+                                             for_scene=testcase.sc1,
+                                             parent=None,
+                                             active=True)
+
+    testcase.partscene1_2 = PartScene.create(text="text 2",
+                                             for_scene=testcase.sc1,
+                                             parent=testcase.partscene1_1,
+                                             active=True)
+
+    testcase.partscene2_1 = PartScene.create(text="text 1",
+                                             for_scene=testcase.sc2,
+                                             parent=None,
+                                             active=True)
+
+    testcase.partscene2_2 = PartScene.create(text="text 2",
+                                             for_scene=testcase.sc2,
+                                             parent=testcase.partscene2_1,
+                                             active=True)
 
 
 def utils_create_object_type():
@@ -45,8 +64,13 @@ def utils_create_game_session(testcase, user, character):
 
 def utils_create_two_scene_one_choice_by_scene(testcase):
     utils_create_two_scenes_with_one_place(testcase)
-    testcase.ch1 = Choice1Sceneto1Scene.objects.create(text="Choic1", for_scene=testcase.sc1, next_scene=testcase.sc2)
-    testcase.ch2 = Choice1Sceneto1Scene.objects.create(text="Choic2", for_scene=testcase.sc2, next_scene=testcase.sc1)
+    testcase.ch1 = Choice1PartSceneto1Scene.objects.create(text="Choic1", for_part_scene=testcase.partscene1_1,
+                                                           next_scene=None,
+                                                           next_part_scene=testcase.partscene1_2)
+
+    testcase.ch2 = Choice1PartSceneto1Scene.objects.create(text="Choic2", for_part_scene=testcase.partscene1_1,
+                                                           next_scene=testcase.sc2,
+                                                           next_part_scene=None)
 
 
 class CreateModelTest(TestCase):
@@ -74,16 +98,16 @@ class CreateModelTest(TestCase):
 
     def test_create_choice(self):
         utils_create_two_scene_one_choice_by_scene
-        self.assertEqual(2, Choice1Sceneto1Scene.objects.all().count())
-        self.assertEqual(1, self.sc1.current_choices_set.all().count())
-        ch = self.sc1.current_choices_set.all()[0]
+        self.assertEqual(2, Choice1PartSceneto1Scene.objects.all().count())
+        self.assertEqual(2, self.partscene1_1.current_choices_set.all().count())
+        ch = self.partscene1_1.current_choices_set.all()[0]
         self.assertEqual(self.ch1, ch)
 
     def test_create_quest(self):
         utils_create_two_scenes_with_one_place(self)
         utils_create_two_np_character(self)
         Quest.objects.create(short_name="qu1", title="title", text="Text",
-                             timedelta=12,
+                             time_frame=12,
                              given_by=self.npc1,
                              scene=self.sc1,
                              validation_function='FU')
@@ -115,6 +139,7 @@ class CreateModelTest(TestCase):
 
         HistoryScenesandChoices.objects.create(order=1,
                                                scene=self.sc1,
+                                               scene_part=self.partscene1_1,
                                                choice=self.ch1,
                                                place=self.p,
                                                game_session=self.gm)

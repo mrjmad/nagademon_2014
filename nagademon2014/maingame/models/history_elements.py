@@ -39,8 +39,14 @@ class NPCharacter(Character):
         return u"NPC : %s  %s" % (self.first_name, self.last_name)
 
 
+class PlaceManager(models.Manager):
+    def get_by_natural_key(self, short_name):
+        return self.get(short_name=short_name)
+
+
 @python_2_unicode_compatible
 class Place(models.Model):
+    objects = PlaceManager()
     begin_sound = models.CharField(_("Begin's Sound"), max_length=200, blank=True, null=True)
     ambiance_sound = models.CharField(_("Ambiance's Sound"), max_length=200, blank=True, null=True)
     short_name = models.CharField(_("Place's short Name"), max_length=20, unique=True)
@@ -51,6 +57,9 @@ class Place(models.Model):
     def __str__(self):
         return self.name
 
+    def natural_key(self):
+        return self.short_name,
+
 
 @python_2_unicode_compatible
 class Scene(models.Model):
@@ -59,7 +68,7 @@ class Scene(models.Model):
     filename = models.CharField("Scene's Filename", max_length=80)
     begin_sound = models.CharField(_("Begin's Sound"), max_length=200, blank=True, null=True)
     ambiance_sound = models.CharField(_("Ambiance's Sound"), max_length=200, blank=True, null=True)
-    text = models.TextField("Scene's Text")
+    synopsis = models.TextField("Scene's synopsis, only for authors")
     final = models.BooleanField("Final Round ?", default=False)
     place = models.ForeignKey(Place, verbose_name="Scene's Place",
                               blank=True, null=True)
@@ -72,15 +81,33 @@ class Scene(models.Model):
 
 
 @python_2_unicode_compatible
-class Choice1Sceneto1Scene(models.Model):
-    text = models.CharField("Choice's Text", max_length=400)
-    for_scene = models.ForeignKey(Scene, verbose_name="Current Scene",
-                                  related_name="current_choices_set")
-    next_scene = models.ForeignKey(Scene, verbose_name="Next Scene",
-                                   related_name="leading_choices_set")
+class PartScene(models.Model):
+    text = models.CharField("Scene's Text", max_length=400)
+    for_scene = models.ForeignKey(Scene, verbose_name="Scene")
+    limited_to_player = models.ForeignKey(PlayerCharacter, blank=True, null=True)
+    parent = models.ForeignKey('self', blank=True, null=True)
+    active = models.BooleanField(default=True)
 
     def __str__(self):
-        return "%s |scene :%s" % (self.text, self.for_scene)
+        return "Text %s |for scene :%s" % (self.text, self.for_scene)
+
+
+@python_2_unicode_compatible
+class Choice1PartSceneto1Scene(models.Model):
+    text = models.CharField("Choice's Text", max_length=400)
+    for_part_scene = models.ForeignKey(PartScene, verbose_name="Current Part Scene",
+                                  related_name="current_choices_set")
+    next_scene = models.ForeignKey(Scene, verbose_name="Next Scene",
+                                   related_name="leading_choices_set",
+                                   null=True, blank=True)
+    next_part_scene = models.ForeignKey(PartScene, verbose_name="Next Part Scene",
+                                   related_name="leading_choices_set",
+                                   null=True, blank=True)
+
+    def __str__(self):
+        return "%s |for scene %s , part scene id :%s" % (self.text,
+                                                         self.for_part_scene.for_scene,
+                                                         self.for_part_scene.id)
 
 
 @python_2_unicode_compatible
@@ -88,7 +115,7 @@ class Quest(models.Model):
     short_name = models.CharField(_("Quest's short Name"), max_length=20, unique=True)
     title = models.CharField("Quest's Title", max_length=140)
     text = models.TextField("Quest's Text")
-    timedelta = models.PositiveIntegerField(_("Maximum Time (in minutes) for validate the Quest"), default=0)
+    time_frame = models.PositiveIntegerField(_("Maximum Time (in minutes) for validate the Quest"), default=0)
     given_by = models.ForeignKey(NPCharacter, verbose_name=_('Given by'))
     scene = models.ForeignKey(Scene, verbose_name=_("Scene who Quest is activable"),
                               related_name=_("quests_for_scene"))
